@@ -28,13 +28,13 @@ export default function App({
   pageProps: { session, ...pageProps },
   ...rest
 }: AppPropsWithLayout) {
-  const { inter } = useFonts();
+  const { OpenSans } = useFonts();
 
   const layout = Component.layout ?? 'none';
   const ModifiedComponent = ComponentMap[layout];
 
   return (
-    <div className={inter}>
+    <div className={OpenSans}>
       <SessionProvider session={session}>
         {/* <Head></Head> */}
         <ThemeProvider

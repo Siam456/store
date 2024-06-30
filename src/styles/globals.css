@@ -15,7 +15,7 @@
     /* --primary: 222.2 47.4% 11.2%; */
     --primary: 215, 28%, 17%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 267 53% 70%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -29,7 +29,13 @@
     --radius: 0.5rem;
   }
 
-  .dark {
+  .item {
+    aspect-ratio: 4 / 5;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* .dark {
     --gradient: linear-gradient(to top left, #334d50, #cbcaa5);
 
     --background: 198 70.3% 4.08%;
@@ -62,7 +68,7 @@
     --ring: 198 22% 26%;
 
     --radius: 0.5rem;
-  }
+  } */
 }
 
 @layer base {
@@ -93,4 +99,17 @@
   height: 18rem;
   border: none;
   font-size: 1.125rem;
+}
+
+.gallery-images {
+  display: flex;
+  gap: 1rem;
+  overflow: auto;
+}
+
+@media (min-width: 768px) {
+  .gallery-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  }
 }

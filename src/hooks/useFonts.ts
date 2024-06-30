@@ -19,7 +19,7 @@ const Lexend = localFont({
     },
   ],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-Lexend',
 });
 const Roboto = localFont({
   src: [
@@ -29,7 +29,18 @@ const Roboto = localFont({
     },
   ],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-Roboto',
+});
+
+const OpenSans = localFont({
+  src: [
+    {
+      path: '../../public/fonts/OpenSans-VariableFont_wdth,wght.ttf',
+      style: 'normal',
+    },
+  ],
+  display: 'swap',
+  variable: '--font-OpenSans',
 });
 
 export default function useFonts() {
@@ -37,5 +48,6 @@ export default function useFonts() {
     inter: `${inter.className} font-sans`,
     lexend: `${Lexend.className} font-sans`,
     Roboto: `${Roboto.className} font-sans`,
+    OpenSans: `${OpenSans.className} font-sans`,
   };
 }

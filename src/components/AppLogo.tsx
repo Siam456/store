@@ -1,15 +1,21 @@
+import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
-export default function AppLogo() {
+export default function AppLogo({ className }: { className?: string }) {
   return (
-    <a
+    <Link
       href="/"
-      className="router-link-active router-link-exact-active md:w-[160px]"
+      className={`${className} router-link-active router-link-exact-active md:w-[160px]`}
     >
       <div className="flex items-center gap-2 text-lg font-bold">
-        <img src="./logo.svg" alt="logo" width={32} height={32} />
+        <Image src="/logo.png" alt="logo" width={32} height={32} />
         <span>SooNext</span>
       </div>
-    </a>
+    </Link>
   );
 }
+
+AppLogo.defaultProps = {
+  className: '',
+};

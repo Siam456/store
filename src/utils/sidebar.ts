@@ -1,39 +1,33 @@
 import {
-  // ChatBubbleLeftRightIcon,
-  Squares2X2Icon,
-} from '@heroicons/react/24/solid';
-
-import { CogIcon, UsersIcon } from '@heroicons/react/24/outline';
+  HomeIcon,
+  BoxIcon,
+  DashboardIcon,
+  MobileIcon,
+} from '@radix-ui/react-icons';
 
 const sidebar = [
   {
-    path: '/dashboard',
-    icon: Squares2X2Icon,
-    name: 'dashboard',
+    path: '/home',
+    icon: HomeIcon,
+    name: 'Home',
   },
 
   {
-    path: '/users',
-    icon: UsersIcon,
-    name: 'Users',
+    path: '/products',
+    icon: BoxIcon,
+    name: 'Products',
   },
   {
-    path: '/admins',
-    icon: UsersIcon,
-    name: 'Admins',
+    path: '/categories',
+    icon: DashboardIcon,
+    name: 'Categories',
   },
 
   {
-    path: '/settings',
-    icon: CogIcon,
-    name: 'Settings',
+    path: '/contact',
+    icon: MobileIcon,
+    name: 'Contact',
   },
-
-  // {
-  //   path: '/dashboard/dealer',
-  //   icon: GlobeAsiaAustraliaIcon,
-  //   name: 'Dealers',
-  // },
 ];
 
 export default sidebar;
