@@ -3,6 +3,7 @@ import { signOut } from 'next-auth/react';
 
 import { useRouter } from 'next/router';
 
+import { HeartIcon, IdCardIcon } from '@radix-ui/react-icons';
 import sidebar from '@/utils/sidebar';
 import { Button } from '@/components/ui/button';
 import NavItem from './NavItem';
@@ -29,6 +30,8 @@ export default function SidebarContent() {
                 name={item.name}
               />
             ))}
+            <NavItem href="/" Inco={HeartIcon} name="WishList" />
+            <NavItem href="/" Inco={IdCardIcon} name="My Account" />
           </div>
         </div>
 

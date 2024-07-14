@@ -7,7 +7,7 @@ import {
 
 const sidebar = [
   {
-    path: '/home',
+    path: '/',
     icon: HomeIcon,
     name: 'Home',
   },

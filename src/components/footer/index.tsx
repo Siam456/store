@@ -1,5 +1,4 @@
 import React from 'react';
-import AppLogo from '../AppLogo';
 import {
   Select,
   SelectContent,
@@ -8,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AppLogo from '../AppLogo';
 import FooterLinks from './FooterLinks';
 import FotterBottom from './FotterBottom';
 

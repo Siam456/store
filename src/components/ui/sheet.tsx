@@ -53,30 +53,74 @@ const sheetVariants = cva(
   },
 );
 
+const sheetCloseButtonVariants = cva(
+  'absolute top-5 rounded-lg p-2 opacity-70 shadow-xl ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary',
+  {
+    variants: {
+      CloseButtonSide: {
+        left: 'right-4 top-5',
+        right: 'left-4 top-5',
+      },
+    },
+    defaultVariants: {
+      CloseButtonSide: 'left',
+    },
+  },
+);
+
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+    // VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  closeButtonSide?: 'left' | 'right';
+  isCloseButton?: boolean;
+}
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = 'right', className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-5 rounded-lg p-2 opacity-70 shadow-lg ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <Cross2Icon className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-));
+>(
+  (
+    {
+      side = 'right',
+      className,
+      closeButtonSide = 'left',
+      isCloseButton = true,
+      children,
+      ...props
+    },
+    ref,
+  ) => (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(
+          sheetVariants({ side }),
+          className,
+          closeButtonSide === 'left' ? '' : 'pl-16',
+        )}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close
+          className={cn(
+            sheetCloseButtonVariants({ CloseButtonSide: closeButtonSide }),
+            isCloseButton ? '' : 'hidden',
+          )}
+        >
+          <Cross2Icon className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  ),
+);
 SheetContent.displayName = SheetPrimitive.Content.displayName;
+SheetContent.defaultProps = {
+  closeButtonSide: 'left',
+  isCloseButton: true,
+};
 
 function SheetHeader({
   className,

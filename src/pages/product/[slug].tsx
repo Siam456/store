@@ -39,26 +39,17 @@ export default function Product() {
             <BreadcrumbLink href="/products">Products</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          {isLoading ? (
-            <div>Loading...</div>
-          ) : (
-            data &&
-            data?.category?.length > 0 && (
-              <>
-                <BreadcrumbItem>
-                  <BreadcrumbLink
-                    href={`/product-category/${data?.category[0]}`}
-                  >
-                    {data?.category[0]}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-              </>
-            )
+          {!isLoading && data && data?.category?.length > 0 && (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={`/product-category/${data?.category[0]}`}>
+                  {data?.category[0]}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
           )}
-          {isLoading ? (
-            <div>Loading...</div>
-          ) : (
+          {!isLoading && (
             <BreadcrumbItem>
               <BreadcrumbPage>{data?.title || ''}</BreadcrumbPage>
             </BreadcrumbItem>
@@ -66,7 +57,9 @@ export default function Product() {
         </BreadcrumbList>
       </Breadcrumb>
       {isLoading ? (
-        <div>Loading...</div>
+        <div className="my-32 flex w-full items-center justify-center">
+          Loading...
+        </div>
       ) : (
         <>
           <Basicinfo data={data} />

@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { toggleSidebar } from '@/redux/features/sidebar/sidebarConfigSlice';
-import SidebarContent from './SidebarContent';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import SidebarContent from './SidebarContent';
 
 function MobileSidebar() {
   const dispatch = useDispatch();

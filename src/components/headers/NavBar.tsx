@@ -5,10 +5,13 @@ import Search from '@/components/ui/search';
 // import UserNav from '@/components/headers/user-nav';
 import MainNav from '@/components/headers/main-nav';
 import AppLogo from '../AppLogo';
+import { Button } from '../ui/button';
 
 export default function NavBar({
+  toggleCartDrawer,
   toggleSidebar,
 }: {
+  toggleCartDrawer: () => void;
   toggleSidebar: () => void;
 }) {
   return (
@@ -27,55 +30,60 @@ export default function NavBar({
         <div className="ml-auto flex items-center space-x-4">
           <Search placeholder="Search Products..." className="" />
           <PersonIcon className="h-5 w-5" />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            // xmlns:xlink="http://www.w3.org/1999/xlink"
-            aria-hidden="true"
-            role="img"
-            className="icon mr-1 md:mr-0"
-            width="22px"
-            height="22px"
-            viewBox="0 0 512 512"
-            data-v-4847b53f=""
+          <Button
+            onClick={() => toggleCartDrawer()}
+            className="p-0 hover:bg-transparent"
+            variant="ghost"
           >
-            <circle
-              cx="176"
-              cy="416"
-              r="16"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-            />
-            <circle
-              cx="400"
-              cy="416"
-              r="16"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-            />
-            <path
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-              d="M48 80h64l48 272h256"
-            />
-            <path
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-              d="M160 288h249.44a8 8 0 0 0 7.85-6.43l28.8-144a8 8 0 0 0-7.85-9.57H128"
-            />
-          </svg>
-          {/* <UserNav /> */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              // xmlns:xlink="http://www.w3.org/1999/xlink"
+              aria-hidden="true"
+              role="img"
+              className="icon mr-1 md:mr-0"
+              width="22px"
+              height="22px"
+              viewBox="0 0 512 512"
+              data-v-4847b53f=""
+            >
+              <circle
+                cx="176"
+                cy="416"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+              />
+              <circle
+                cx="400"
+                cy="416"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+              />
+              <path
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+                d="M48 80h64l48 272h256"
+              />
+              <path
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+                d="M160 288h249.44a8 8 0 0 0 7.85-6.43l28.8-144a8 8 0 0 0-7.85-9.57H128"
+              />
+            </svg>
+          </Button>
         </div>
       </div>
     </header>

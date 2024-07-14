@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
   DiscordLogoIcon,
+  // HeartFilledIcon,
   HeartIcon,
   InstagramLogoIcon,
   Share1Icon,
@@ -11,33 +12,45 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export default function Basicinfo({
-  data,
-}: {
-  data: {
-    _id: string;
-    title: string;
-    images: string[];
-    discount: number;
-    avgRating: number;
-    originalPrice: number;
-    price: number;
-    quantity: number;
-    sku: string;
-    description: string;
-    category: string[];
-    colors: string[];
-    sizes: string[];
-    range: string[];
-  };
-}) {
-  const [selectedImage, setSelectedImage] = useState('./loading-img.jpg');
+type Product = {
+  _id: string;
+  title: string;
+  images: string[];
+  discount: number;
+  slug: string;
+  avgRating: number;
+  originalPrice: number;
+  price: number;
+  quantity: number;
+  sku: string;
+  description: string;
+  category: string[];
+  colors: string[];
+  sizes: string[];
+  range: string[];
+};
+
+export default function Basicinfo({ data }: { data: Product }) {
+  const [selectedImage, setSelectedImage] = useState('./placeholder.webp');
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedrange, setSelectedRange] = useState<string | null>(null);
 
   const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const [isProductOnWishlist, setIsProductOnWishlist] = useState(false);
+
+  useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+
+    if (wishlist.length > 0 && data) {
+      const _isProductOnWishlist = wishlist.some(
+        (item: Product) => item._id === data._id,
+      );
+      setIsProductOnWishlist(_isProductOnWishlist);
+    }
+  }, [data]);
 
   useEffect(() => {
     if (data) {
@@ -72,6 +85,44 @@ export default function Basicinfo({
   const handleSelectRange = (range: string) => {
     setSelectedRange(range);
   };
+
+  const addToWishlist = (product: Product) => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+
+    const _isProductOnWishlist = wishlist.some(
+      (item: Product) => item._id === product._id,
+    );
+
+    if (!_isProductOnWishlist)
+      localStorage.setItem(
+        'wishlist',
+        JSON.stringify([
+          {
+            _id: product._id,
+            title: product.title,
+            images: product.images,
+            discount: product.discount,
+            avgRating: product.avgRating,
+            originalPrice: product.originalPrice,
+            price: product.price,
+            slug: product.slug,
+          },
+          ...wishlist,
+        ]),
+      );
+
+    setIsProductOnWishlist(true);
+  };
+
+  const removeProductFromWishlist = (product: Product) => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const newWishlist = wishlist.filter(
+      (item: Product) => item._id !== product._id,
+    );
+    localStorage.setItem('wishlist', JSON.stringify(newWishlist));
+    setIsProductOnWishlist(false);
+  };
+
   return (
     <div className="mt-6 flex flex-col gap-10 md:flex-row md:justify-between lg:gap-24">
       <div className="relative flex-1">
@@ -135,13 +186,15 @@ export default function Basicinfo({
             </div>
           </div>
           <div className="flex text-xl font-semibold">
-            {data?.discount > 0 && (
+            {data?.discount > 0 ? (
               <>
                 <span className="font-normal text-gray-400 line-through">
                   €${data?.originalPrice?.toFixed(2)}
                 </span>
                 <span className="ml-2">€{data?.price?.toFixed(2)}</span>
               </>
+            ) : (
+              <span className="ml-2">€{data?.price?.toFixed(2)}</span>
             )}
           </div>
         </div>
@@ -269,7 +322,10 @@ export default function Basicinfo({
               min={1}
               max={data?.quantity}
             />
-            <Button className="w-full" disabled={data?.quantity === 0}>
+            <Button
+              className="w-full min-w-[150px] md:max-w-xs"
+              disabled={data?.quantity === 0}
+            >
               Add to Cart
             </Button>
           </div>
@@ -298,10 +354,37 @@ export default function Basicinfo({
             <hr />
           </div>
           <div className="flex flex-wrap gap-4">
-            <button className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400">
-              <HeartIcon className="h-4 w-4" />
-              <span>Add To Wishlist</span>
-            </button>
+            {isProductOnWishlist ? (
+              <button
+                onClick={() => removeProductFromWishlist(data)}
+                className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
+              >
+                <svg
+                  data-v-4847b53f=""
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  role="img"
+                  className="icon text-red-400"
+                  width="18px"
+                  height="18px"
+                  viewBox="0 0 512 512"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M256 448a32 32 0 0 1-18-5.57c-78.59-53.35-112.62-89.93-131.39-112.8c-40-48.75-59.15-98.8-58.61-153C48.63 114.52 98.46 64 159.08 64c44.08 0 74.61 24.83 92.39 45.51a6 6 0 0 0 9.06 0C278.31 88.81 308.84 64 352.92 64c60.62 0 110.45 50.52 111.08 112.64c.54 54.21-18.63 104.26-58.61 153c-18.77 22.87-52.8 59.45-131.39 112.8a32 32 0 0 1-18 5.56"
+                  />
+                </svg>
+                <span>Remove from Wishlist</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => addToWishlist(data)}
+                className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
+              >
+                <HeartIcon className="h-4 w-4" />
+                <span>Add To Wishlist</span>
+              </button>
+            )}
             {isShareOpen ? (
               <div className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400">
                 <Link href="/">

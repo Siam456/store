@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React from 'react';
 
 export default function FooterLinks() {
@@ -6,25 +7,25 @@ export default function FooterLinks() {
       <div>
         <h4 className="font-semibold">Information</h4>
         <ul className="mt-4 space-y-4">
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               About Us
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Contact Us
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Press
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               FAQ's
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
@@ -32,25 +33,25 @@ export default function FooterLinks() {
       <div>
         <h4 className="font-semibold">Products</h4>
         <ul className="mt-4 space-y-4">
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               New Arrivals
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               On sale
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Top rated
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Gift Cards
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
@@ -58,25 +59,25 @@ export default function FooterLinks() {
       <div>
         <h4 className="font-semibold">Customer Service</h4>
         <ul className="mt-4 space-y-4">
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Contact Us
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Shipping & Returns
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Privacy Policy
-            </a>
+            </Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
+          <li className=" text-sm hover:underline">
+            <Link target="_blank" href="/">
               Terms & Conditions
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
@@ -84,25 +85,17 @@ export default function FooterLinks() {
       <div>
         <h4 className="font-semibold">My Account</h4>
         <ul className="mt-4 space-y-4">
-          <li className=" text-sm">
-            <a target="_blank" href="/">
-              Contact Us
-            </a>
+          <li className=" text-sm hover:underline">
+            <Link href="/">My Account</Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
-              Shipping & Returns
-            </a>
+          <li className=" text-sm hover:underline">
+            <Link href="/">Order History</Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
-              Privacy Policy
-            </a>
+          <li className=" text-sm hover:underline">
+            <Link href="/">Wishlist</Link>
           </li>
-          <li className=" text-sm">
-            <a target="_blank" href="/">
-              Terms & Conditions
-            </a>
+          <li className=" text-sm hover:underline">
+            <Link href="/">Newsletter</Link>
           </li>
         </ul>
       </div>

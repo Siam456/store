@@ -2,8 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import sidebarReducer from './features/sidebar/sidebarConfigSlice';
 import modalReducer from './features/sidebar/modalConfig';
 import api from './api/apiSlice';
-// import registrationConfigSlice from './features/auth/registrationConfigSlice';
 import authconfigSlice from './features/auth/authconfig.slice';
+import cartDrawerConfigSlice from './features/sidebar/cartDrawerConfigSlice';
 
 const store = configureStore({
   reducer: {
@@ -11,6 +11,7 @@ const store = configureStore({
     sidebar: sidebarReducer,
     modal: modalReducer,
     auth: authconfigSlice,
+    cartDrawer: cartDrawerConfigSlice,
     // user: userReducer,
   },
   middleware: (getDefaultMiddleware) =>
