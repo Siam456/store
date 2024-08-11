@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type Product = {
   _id: string;
@@ -25,9 +26,15 @@ type Product = {
   sku: string;
   description: string;
   category: string[];
-  colors: string[];
-  sizes: string[];
-  range: string[];
+  shortDescription: string;
+  dimensions: {
+    colors: {
+      name: string;
+      hexCode: string;
+    }[];
+    sizes: string[];
+    range: string[];
+  };
 };
 
 export default function Basicinfo({ data }: { data: Product }) {
@@ -56,19 +63,21 @@ export default function Basicinfo({ data }: { data: Product }) {
     if (data) {
       setSelectedImage(data.images[0]);
 
-      if (data.colors.length > 0) {
-        setSelectedColor(data.colors[0]);
+      if (data?.dimensions?.colors && data?.dimensions?.colors?.length > 0) {
+        setSelectedColor(data?.dimensions?.colors[0].name);
       }
 
-      if (data.sizes.length > 0) {
-        setSelectedSize(data.sizes[0]);
+      if (data?.dimensions?.sizes && data?.dimensions?.sizes?.length > 0) {
+        setSelectedSize(data?.dimensions?.sizes[0]);
       }
 
-      if (data.range.length > 0) {
-        setSelectedRange(data.range[0]);
+      if (data?.dimensions?.range && data?.dimensions?.range?.length > 0) {
+        setSelectedRange(data?.dimensions?.range[0]);
       }
     }
   }, [data]);
+
+  // console.log(data);
 
   const handleSelectImage = (image: string) => {
     setSelectedImage(image);
@@ -161,28 +170,33 @@ export default function Basicinfo({ data }: { data: Product }) {
               {data?.title}
             </h1>
             <div className="inline-flex items-center">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <svg
-                  key={`${index + 1}`}
-                  data-v-4847b53f=""
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  role="img"
-                  width="14px"
-                  height="14px"
-                  viewBox="0 0 512 512"
-                  className={`icon ${
-                    index + 1 <= data?.avgRating
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                >
-                  <path
-                    fill="currentColor"
-                    d="M394 480a16 16 0 0 1-9.39-3L256 383.76L127.39 477a16 16 0 0 1-24.55-18.08L153 310.35L23 221.2a16 16 0 0 1 9-29.2h160.38l48.4-148.95a16 16 0 0 1 30.44 0l48.4 149H480a16 16 0 0 1 9.05 29.2L359 310.35l50.13 148.53A16 16 0 0 1 394 480"
-                  />
-                </svg>
-              ))}
+              <div className="inline-flex items-center">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <svg
+                    key={`${index + 1}`}
+                    data-v-4847b53f=""
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    role="img"
+                    width="14px"
+                    height="14px"
+                    viewBox="0 0 512 512"
+                    className={`icon ${
+                      index + 1 <= data?.avgRating
+                        ? 'text-yellow-400'
+                        : 'text-gray-300'
+                    }`}
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M394 480a16 16 0 0 1-9.39-3L256 383.76L127.39 477a16 16 0 0 1-24.55-18.08L153 310.35L23 221.2a16 16 0 0 1 9-29.2h160.38l48.4-148.95a16 16 0 0 1 30.44 0l48.4 149H480a16 16 0 0 1 9.05 29.2L359 310.35l50.13 148.53A16 16 0 0 1 394 480"
+                    />
+                  </svg>
+                ))}
+                <p className="ml-2 text-sm text-muted-foreground">
+                  ({data?.avgRating})
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex text-xl font-semibold">
@@ -215,99 +229,123 @@ export default function Basicinfo({ data }: { data: Product }) {
           </div>
         </div>
 
-        <div className="prose mb-8 font-light">
-          <p>{data?.description}</p>
+        <div className="prose mb-8 text-sm font-light">
+          <p>{data?.shortDescription}</p>
         </div>
 
         <hr />
 
-        <form>
-          {selectedColor && (
-            <div className="mb-8 mt-4 flex flex-col justify-between gap-1">
-              <div className="relative flex flex-wrap justify-between py-2">
-                <div className="grid gap-2">
-                  <div className="text-sm">
-                    Color:{' '}
-                    <span className="capitalize text-gray-400">
-                      {selectedColor}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    {data?.colors.map((color: string, colorIdx: number) => (
+        <form className="mb-8 mt-4 flex flex-col justify-between gap-1">
+          {data?.dimensions?.colors && data?.dimensions?.colors?.length > 0 && (
+            <div className="relative flex flex-wrap justify-between py-2">
+              <div className="grid gap-2">
+                <div className="text-sm">
+                  Color:{' '}
+                  <span className="capitalize text-gray-400">
+                    {selectedColor}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {data?.dimensions?.colors?.map(
+                    (
+                      color: {
+                        name: string;
+                        hexCode: string;
+                      },
+                      colorIdx: number,
+                    ) => (
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSelectColor(color);
+                          handleSelectColor(color?.name);
                         }}
                         key={`${colorIdx + 1}`}
-                        className={`h-8 w-8 rounded-full ${color.trim().toLowerCase() === selectedColor.trim().toLocaleLowerCase() && 'border-2 border-[#6b7280]'}  bg-${color.trim().toLocaleLowerCase()} bg-${color.trim().toLocaleLowerCase()}-500 shadow-inner`}
                         style={{
-                          boxShadow: 'inset 0 0 0 2px #F3F4F6',
+                          background: color.hexCode.trim().toLocaleLowerCase(),
+                          border: '2px solid white',
                         }}
+                        className={cn(
+                          'h-8 w-8 rounded-full ring-[#6b7280]',
+                          color.name.trim().toLocaleLowerCase() ===
+                            selectedColor?.trim()?.toLocaleLowerCase()
+                            ? 'ring-2'
+                            : 'ring-0',
+                        )}
                       />
-                    ))}
-                  </div>
+                    ),
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {selectedSize && (
-            <div className="mb-8 mt-4 flex flex-col justify-between gap-1">
-              <div className="relative flex flex-wrap justify-between py-2">
-                <div className="grid gap-2">
-                  <div className="text-sm">
-                    Size:{' '}
-                    <span className="capitalize text-gray-400">
-                      {selectedSize}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    {data?.sizes.map((size: string, sizeIdx: number) => (
+          {data?.dimensions?.sizes && data?.dimensions?.sizes?.length > 0 && (
+            <div className="relative flex flex-wrap justify-between py-2">
+              <div className="grid gap-2">
+                <div className="text-sm">
+                  Size:{' '}
+                  <span className="capitalize text-gray-400">
+                    {selectedSize}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {data?.dimensions?.sizes?.map(
+                    (size: string, sizeIdx: number) => (
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           handleSelectSize(size);
                         }}
                         key={`${sizeIdx + 1}`}
-                        className={` radio-button picker-long rounded-lg border-2 px-4 py-2 text-sm ${size.trim().toLowerCase() === selectedSize.trim().toLocaleLowerCase() ? ' border-[#6b7280]' : 'border-white'} bg-background shadow-inner`}
+                        className={` radio-button picker-long rounded-lg border-2 bg-white px-4 py-2  text-sm`}
                         style={{
                           boxShadow: 'inset 0 0 0 2px #F3F4F6',
+                          border:
+                            size.trim().toLocaleLowerCase() ===
+                            selectedSize?.trim()?.toLocaleLowerCase()
+                              ? '2px solid #6b7280'
+                              : '2px solid white',
                         }}
                       >
                         {size}
                       </button>
-                    ))}
-                  </div>
+                    ),
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {selectedrange && (
-            <div className="mb-8 mt-4 flex flex-col justify-between gap-1">
-              <div className="relative flex flex-wrap justify-between py-2">
-                <div className="grid gap-2">
-                  <div className="text-sm">
-                    Range{' '}
-                    <span className="capitalize text-gray-400">
-                      {selectedrange}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    {data?.range.map((range: string, rangeIdx: number) => (
+          {data?.dimensions?.range && data?.dimensions?.range?.length > 0 && (
+            <div className="relative flex flex-wrap justify-between py-2">
+              <div className="grid gap-2">
+                <div className="text-sm">
+                  Range{' '}
+                  <span className="capitalize text-gray-400">
+                    {selectedrange}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {data?.dimensions?.range?.map(
+                    (range: string, rangeIdx: number) => (
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           handleSelectRange(range);
                         }}
+                        style={{
+                          border:
+                            range === selectedrange
+                              ? '2px solid #6b7280'
+                              : '2px solid white',
+                        }}
                         key={`${rangeIdx + 1}`}
-                        className={` radio-button picker-long rounded-lg border-2 px-4 py-2 text-sm ${range.trim().toLowerCase() === selectedrange.trim().toLocaleLowerCase() ? ' border-[#6b7280]' : 'border-white'} bg-background shadow-inner`}
+                        className={` radio-button picker-long rounded-lg border-2 bg-white px-4 py-2 text-sm `}
                       >
                         {range}
                       </button>
-                    ))}
-                  </div>
+                    ),
+                  )}
                 </div>
               </div>
             </div>

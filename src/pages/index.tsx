@@ -11,7 +11,6 @@ const Home = function () {
       <LogoSection />
       <CategorySection />
       <InfoSection />
-      
       <PopularProductSection />
     </>
   );

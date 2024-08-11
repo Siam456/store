@@ -12,7 +12,7 @@ import {
 import { useGetProductBySlugQuery } from '@/redux/features/products/products.api';
 
 import Basicinfo from '@/components/sections/product/Basicinfo';
-import ReviewSection from '@/components/sections/product/Review';
+import ReviewSection from '@/components/sections/product/ReviewAndDescription';
 import RecomandedProduct from '@/components/sections/product/RecomandedProduct';
 
 export default function Product() {

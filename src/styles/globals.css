@@ -107,6 +107,17 @@
   overflow: auto;
 }
 
+.prose > * {
+  all: revert;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+
+.prose .ql-indent-1 {
+  margin-left: 1.5rem;
+}
+
 @media (min-width: 768px) {
   .gallery-images {
     display: grid;
