@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Controller, useForm } from 'react-hook-form';
 
 type Product = {
   _id: string;
@@ -35,14 +36,34 @@ type Product = {
     sizes: string[];
     range: string[];
   };
+  varieties: {
+    color: string;
+    size: string;
+    range: string;
+    price: number;
+    salePrice: number;
+    availability: {
+      inStock: boolean;
+      quantity: number;
+    };
+  }[];
 };
 
 export default function Basicinfo({ data }: { data: Product }) {
-  const [selectedImage, setSelectedImage] = useState('./placeholder.webp');
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const { watch, control, setValue, handleSubmit } = useForm({
+    defaultValues: {
+      color: '',
+      size: '',
+      range: '',
+      quantity: 1,
+    },
+  });
 
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedrange, setSelectedRange] = useState<string | null>(null);
+  const [price, setPrice] = useState<number>(0);
+  const [originalPrice, setOriginalPrice] = useState<number>(0);
+  const [isStockAvailable, setIsStockAvailable] = useState<boolean>(false);
+
+  const [selectedImage, setSelectedImage] = useState('./placeholder.webp');
 
   const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -60,39 +81,58 @@ export default function Basicinfo({ data }: { data: Product }) {
   }, [data]);
 
   useEffect(() => {
+    const subscription = watch((value) => {
+      if (data?.varieties) {
+        const selectedVariety = data?.varieties.find(
+          (variety) =>
+            variety.color === value.color &&
+            variety.size === value.size &&
+            variety.range === value.range,
+        );
+
+        setOriginalPrice(selectedVariety?.price || data?.originalPrice || 0);
+        setPrice(selectedVariety?.salePrice || data?.price || 0);
+
+        if (selectedVariety?.availability?.inStock) {
+          setIsStockAvailable(true);
+        } else {
+          setIsStockAvailable(false);
+        }
+
+        // setValue('quantity', selectedVariety?.availability?.quantity || 1);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [data, watch]);
+
+  useEffect(() => {
     if (data) {
-      setSelectedImage(data.images[0]);
+      setSelectedImage(data?.images[0]);
+      setOriginalPrice(data?.originalPrice);
+      setPrice(data?.price);
+
+      if (data?.quantity > 0) {
+        setIsStockAvailable(true);
+      } else {
+        setIsStockAvailable(false);
+      }
 
       if (data?.dimensions?.colors && data?.dimensions?.colors?.length > 0) {
-        setSelectedColor(data?.dimensions?.colors[0].name);
+        setValue('color', data?.dimensions?.colors[0].name);
       }
 
       if (data?.dimensions?.sizes && data?.dimensions?.sizes?.length > 0) {
-        setSelectedSize(data?.dimensions?.sizes[0]);
+        setValue('size', data?.dimensions?.sizes[0]);
       }
 
       if (data?.dimensions?.range && data?.dimensions?.range?.length > 0) {
-        setSelectedRange(data?.dimensions?.range[0]);
+        setValue('range', data?.dimensions?.range[0]);
       }
     }
-  }, [data]);
-
-  // console.log(data);
+  }, [data, setValue]);
 
   const handleSelectImage = (image: string) => {
     setSelectedImage(image);
-  };
-
-  const handleSelectColor = (color: string) => {
-    setSelectedColor(color);
-  };
-
-  const handleSelectSize = (size: string) => {
-    setSelectedSize(size);
-  };
-
-  const handleSelectRange = (range: string) => {
-    setSelectedRange(range);
   };
 
   const addToWishlist = (product: Product) => {
@@ -130,6 +170,10 @@ export default function Basicinfo({ data }: { data: Product }) {
     );
     localStorage.setItem('wishlist', JSON.stringify(newWishlist));
     setIsProductOnWishlist(false);
+  };
+
+  const onSubmit = (data: any) => {
+    console.log(data);
   };
 
   return (
@@ -203,12 +247,12 @@ export default function Basicinfo({ data }: { data: Product }) {
             {data?.discount > 0 ? (
               <>
                 <span className="font-normal text-gray-400 line-through">
-                  €${data?.originalPrice?.toFixed(2)}
+                  €${originalPrice?.toFixed(2)}
                 </span>
-                <span className="ml-2">€{data?.price?.toFixed(2)}</span>
+                <span className="ml-2">€{price?.toFixed(2)}</span>
               </>
             ) : (
-              <span className="ml-2">€{data?.price?.toFixed(2)}</span>
+              <span className="ml-2">€{price?.toFixed(2)}</span>
             )}
           </div>
         </div>
@@ -217,7 +261,7 @@ export default function Basicinfo({ data }: { data: Product }) {
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Availability: </span>
 
-            {data?.quantity > 0 ? (
+            {isStockAvailable ? (
               <span className="text-green-600">In Stock</span>
             ) : (
               <span className="text-red-600">Out Of Stock</span>
@@ -235,14 +279,17 @@ export default function Basicinfo({ data }: { data: Product }) {
 
         <hr />
 
-        <form className="mb-8 mt-4 flex flex-col justify-between gap-1">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="mb-8 mt-4 flex flex-col justify-between gap-1"
+        >
           {data?.dimensions?.colors && data?.dimensions?.colors?.length > 0 && (
             <div className="relative flex flex-wrap justify-between py-2">
               <div className="grid gap-2">
                 <div className="text-sm">
                   Color:{' '}
                   <span className="capitalize text-gray-400">
-                    {selectedColor}
+                    {watch('color') || ''}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -251,27 +298,49 @@ export default function Basicinfo({ data }: { data: Product }) {
                       color: {
                         name: string;
                         hexCode: string;
+                        imageUrl?: string;
                       },
                       colorIdx: number,
                     ) => (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSelectColor(color?.name);
-                        }}
-                        key={`${colorIdx + 1}`}
-                        style={{
-                          background: color.hexCode.trim().toLocaleLowerCase(),
-                          border: '2px solid white',
-                        }}
-                        className={cn(
-                          'h-8 w-8 rounded-full ring-[#6b7280]',
-                          color.name.trim().toLocaleLowerCase() ===
-                            selectedColor?.trim()?.toLocaleLowerCase()
-                            ? 'ring-2'
-                            : 'ring-0',
-                        )}
-                      />
+                      <div key={`${colorIdx + 1}`}>
+                        <Controller
+                          name="color"
+                          control={control}
+                          render={({ field }) => (
+                            <label
+                              style={{
+                                display: 'inline-block',
+                                background: color.hexCode
+                                  .trim()
+                                  .toLocaleLowerCase(),
+                                border: '2px solid white',
+                              }}
+                              className={cn(
+                                'h-8 w-8 cursor-pointer rounded-full ring-[#6b7280]',
+                                color.name.trim().toLocaleLowerCase() ===
+                                  field?.value?.trim()?.toLocaleLowerCase()
+                                  ? 'ring-2'
+                                  : 'ring-0',
+                              )}
+                              htmlFor={color.name}
+                            >
+                              <input
+                                onClick={(value) => {
+                                  field.onChange(value);
+                                  if (color.imageUrl) {
+                                    setSelectedImage(color.imageUrl);
+                                  }
+                                }}
+                                type="radio"
+                                id={color.name}
+                                name="color"
+                                value={color.name}
+                                hidden
+                              />{' '}
+                            </label>
+                          )}
+                        />
+                      </div>
                     ),
                   )}
                 </div>
@@ -285,30 +354,42 @@ export default function Basicinfo({ data }: { data: Product }) {
                 <div className="text-sm">
                   Size:{' '}
                   <span className="capitalize text-gray-400">
-                    {selectedSize}
+                    {watch('size') || ''}
                   </span>
                 </div>
                 <div className="flex gap-2">
                   {data?.dimensions?.sizes?.map(
                     (size: string, sizeIdx: number) => (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSelectSize(size);
-                        }}
-                        key={`${sizeIdx + 1}`}
-                        className={` radio-button picker-long rounded-lg border-2 bg-white px-4 py-2  text-sm`}
-                        style={{
-                          boxShadow: 'inset 0 0 0 2px #F3F4F6',
-                          border:
-                            size.trim().toLocaleLowerCase() ===
-                            selectedSize?.trim()?.toLocaleLowerCase()
-                              ? '2px solid #6b7280'
-                              : '2px solid white',
-                        }}
-                      >
-                        {size}
-                      </button>
+                      <div key={`${sizeIdx + 1}`}>
+                        <Controller
+                          name="size"
+                          control={control}
+                          render={({ field }) => (
+                            <label
+                              htmlFor={`size-${sizeIdx + 1}`}
+                              className={cn(
+                                'radio-button picker-long cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
+                                size.trim().toLocaleLowerCase() ===
+                                  field?.value?.trim()?.toLocaleLowerCase()
+                                  ? 'border-[#6b7280]'
+                                  : 'border-white',
+                              )}
+                            >
+                              <input
+                                id={`size-${sizeIdx + 1}`}
+                                onClick={(value) => {
+                                  field.onChange(value);
+                                }}
+                                type="radio"
+                                name="size"
+                                value={size}
+                                hidden
+                              />{' '}
+                              {size}
+                            </label>
+                          )}
+                        />
+                      </div>
                     ),
                   )}
                 </div>
@@ -322,28 +403,42 @@ export default function Basicinfo({ data }: { data: Product }) {
                 <div className="text-sm">
                   Range{' '}
                   <span className="capitalize text-gray-400">
-                    {selectedrange}
+                    {watch('range') || ''}
                   </span>
                 </div>
                 <div className="flex gap-2">
                   {data?.dimensions?.range?.map(
                     (range: string, rangeIdx: number) => (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSelectRange(range);
-                        }}
-                        style={{
-                          border:
-                            range === selectedrange
-                              ? '2px solid #6b7280'
-                              : '2px solid white',
-                        }}
-                        key={`${rangeIdx + 1}`}
-                        className={` radio-button picker-long rounded-lg border-2 bg-white px-4 py-2 text-sm `}
-                      >
-                        {range}
-                      </button>
+                      <div key={`${rangeIdx + 1}`}>
+                        <Controller
+                          name="range"
+                          control={control}
+                          render={({ field }) => (
+                            <label
+                              htmlFor={`range-${rangeIdx + 1}`}
+                              className={cn(
+                                'radio-button picker-long cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
+                                range.trim().toLocaleLowerCase() ===
+                                  field?.value?.trim()?.toLocaleLowerCase()
+                                  ? 'border-[#6b7280]'
+                                  : 'border-white',
+                              )}
+                            >
+                              <input
+                                id={`range-${rangeIdx + 1}`}
+                                onClick={(value) => {
+                                  field.onChange(value);
+                                }}
+                                type="radio"
+                                name="range"
+                                value={range}
+                                hidden
+                              />{' '}
+                              {range}
+                            </label>
+                          )}
+                        />
+                      </div>
                     ),
                   )}
                 </div>
@@ -362,7 +457,7 @@ export default function Basicinfo({ data }: { data: Product }) {
             />
             <Button
               className="w-full min-w-[150px] md:max-w-xs"
-              disabled={data?.quantity === 0}
+              disabled={!isStockAvailable}
             >
               Add to Cart
             </Button>
