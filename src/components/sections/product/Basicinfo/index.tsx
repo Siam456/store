@@ -172,8 +172,9 @@ export default function Basicinfo({ data }: { data: Product }) {
     setIsProductOnWishlist(false);
   };
 
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const onSubmit = (_data: any) => {
+    // eslint-disable-next-line no-console
+    console.log(_data);
   };
 
   return (
