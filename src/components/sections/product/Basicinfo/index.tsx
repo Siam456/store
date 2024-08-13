@@ -28,18 +28,21 @@ type Product = {
   description: string;
   category: string[];
   shortDescription: string;
+  colors: {
+    name: string;
+    hexCode: string;
+    imageUrl: string;
+  }[];
   dimensions: {
-    colors: {
-      name: string;
-      hexCode: string;
-    }[];
-    sizes: string[];
-    range: string[];
-  };
+    label: string;
+    values: string[];
+  }[];
   varieties: {
     color: string;
-    size: string;
-    range: string;
+    dimensions: {
+      [key: string]: string;
+    };
+    discount: number;
     price: number;
     salePrice: number;
     availability: {
@@ -50,17 +53,24 @@ type Product = {
 };
 
 export default function Basicinfo({ data }: { data: Product }) {
-  const { watch, control, setValue, handleSubmit } = useForm({
+  const { watch, register, control, setValue, handleSubmit } = useForm({
     defaultValues: {
       color: '',
-      size: '',
-      range: '',
+      discount: 0,
+      dimensions: [
+        {
+          label: '',
+          value: '',
+        },
+      ],
       quantity: 1,
     },
   });
 
   const [price, setPrice] = useState<number>(0);
   const [originalPrice, setOriginalPrice] = useState<number>(0);
+  const [discount, setDiscount] = useState<number>(0);
+  const [quantity, setQuantity] = useState<number>(1);
   const [isStockAvailable, setIsStockAvailable] = useState<boolean>(false);
 
   const [selectedImage, setSelectedImage] = useState('./placeholder.webp');
@@ -86,24 +96,27 @@ export default function Basicinfo({ data }: { data: Product }) {
         const selectedVariety = data?.varieties.find(
           (variety) =>
             variety.color === value.color &&
-            variety.size === value.size &&
-            variety.range === value.range,
+            value?.dimensions?.every(
+              (v) => v && variety.dimensions[v?.label || ''] === v.value,
+            ),
         );
 
         setOriginalPrice(selectedVariety?.price || data?.originalPrice || 0);
         setPrice(selectedVariety?.salePrice || data?.price || 0);
 
+        setQuantity(
+          selectedVariety?.availability?.quantity || data?.quantity || 0,
+        );
+        setDiscount(selectedVariety?.discount || data?.discount || 0);
+
         if (selectedVariety?.availability?.inStock) {
           setIsStockAvailable(true);
-        } else {
-          setIsStockAvailable(false);
         }
-
-        // setValue('quantity', selectedVariety?.availability?.quantity || 1);
       }
     });
+
     return () => subscription.unsubscribe();
-  }, [data, watch]);
+  }, [watch, data]);
 
   useEffect(() => {
     if (data) {
@@ -117,16 +130,18 @@ export default function Basicinfo({ data }: { data: Product }) {
         setIsStockAvailable(false);
       }
 
-      if (data?.dimensions?.colors && data?.dimensions?.colors?.length > 0) {
-        setValue('color', data?.dimensions?.colors[0].name);
+      if (data?.colors && data?.colors?.length > 0) {
+        setValue('color', data?.colors[0].name);
       }
 
-      if (data?.dimensions?.sizes && data?.dimensions?.sizes?.length > 0) {
-        setValue('size', data?.dimensions?.sizes[0]);
-      }
-
-      if (data?.dimensions?.range && data?.dimensions?.range?.length > 0) {
-        setValue('range', data?.dimensions?.range[0]);
+      if (data?.dimensions.length > 0) {
+        setValue(
+          'dimensions',
+          data?.dimensions?.map((dimension) => ({
+            label: dimension.label,
+            value: dimension.values[0],
+          })),
+        );
       }
     }
   }, [data, setValue]);
@@ -182,7 +197,7 @@ export default function Basicinfo({ data }: { data: Product }) {
       <div className="relative flex-1">
         {data?.discount !== 0 && (
           <span className="absolute right-2 top-2 z-10 rounded-md bg-red-400 px-2 py-1 text-xs font-semibold text-white">
-            {data?.discount.toFixed(0)}%
+            {discount.toFixed(0)}%
           </span>
         )}{' '}
         <img
@@ -284,7 +299,7 @@ export default function Basicinfo({ data }: { data: Product }) {
           onSubmit={handleSubmit(onSubmit)}
           className="mb-8 mt-4 flex flex-col justify-between gap-1"
         >
-          {data?.dimensions?.colors && data?.dimensions?.colors?.length > 0 && (
+          {data.colors?.length > 0 && (
             <div className="relative flex flex-wrap justify-between py-2">
               <div className="grid gap-2">
                 <div className="text-sm">
@@ -294,13 +309,9 @@ export default function Basicinfo({ data }: { data: Product }) {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  {data?.dimensions?.colors?.map(
+                  {data.colors.map(
                     (
-                      color: {
-                        name: string;
-                        hexCode: string;
-                        imageUrl?: string;
-                      },
+                      color: { name: string; hexCode: string },
                       colorIdx: number,
                     ) => (
                       <div key={`${colorIdx + 1}`}>
@@ -309,35 +320,27 @@ export default function Basicinfo({ data }: { data: Product }) {
                           control={control}
                           render={({ field }) => (
                             <label
+                              htmlFor={`color-${color.name}`}
                               style={{
                                 display: 'inline-block',
-                                background: color.hexCode
-                                  .trim()
-                                  .toLocaleLowerCase(),
+                                background: color.hexCode.trim().toLowerCase(),
                                 border: '2px solid white',
                               }}
                               className={cn(
                                 'h-8 w-8 cursor-pointer rounded-full ring-[#6b7280]',
-                                color.name.trim().toLocaleLowerCase() ===
-                                  field?.value?.trim()?.toLocaleLowerCase()
+                                color.name.trim().toLowerCase() ===
+                                  field.value.trim().toLowerCase()
                                   ? 'ring-2'
-                                  : 'ring-0',
+                                  : 'hover:ring-2',
                               )}
-                              htmlFor={color.name}
                             >
                               <input
-                                onClick={(value) => {
-                                  field.onChange(value);
-                                  if (color.imageUrl) {
-                                    setSelectedImage(color.imageUrl);
-                                  }
-                                }}
+                                id={`color-${color.name}`}
                                 type="radio"
-                                id={color.name}
-                                name="color"
+                                {...field}
                                 value={color.name}
-                                hidden
-                              />{' '}
+                                className="h-0 w-0 opacity-0"
+                              />
                             </label>
                           )}
                         />
@@ -345,116 +348,105 @@ export default function Basicinfo({ data }: { data: Product }) {
                     ),
                   )}
                 </div>
+              </div>
+              <div className="flex items-center">
+                {data.colors.map(
+                  (
+                    color: {
+                      name: string;
+                      imageUrl: string;
+                    },
+                    colorIdx,
+                  ) => (
+                    <div className="overflow-hidden" key={`${colorIdx + 1}`}>
+                      {color.imageUrl && color.name === watch('color') && (
+                        <img
+                          src={color.imageUrl}
+                          alt={color.name}
+                          className="block max-h-24 max-w-24 rounded-lg"
+                        />
+                      )}
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           )}
 
-          {data?.dimensions?.sizes && data?.dimensions?.sizes?.length > 0 && (
-            <div className="relative flex flex-wrap justify-between py-2">
-              <div className="grid gap-2">
-                <div className="text-sm">
-                  Size:{' '}
-                  <span className="capitalize text-gray-400">
-                    {watch('size') || ''}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  {data?.dimensions?.sizes?.map(
-                    (size: string, sizeIdx: number) => (
-                      <div key={`${sizeIdx + 1}`}>
-                        <Controller
-                          name="size"
-                          control={control}
-                          render={({ field }) => (
-                            <label
-                              htmlFor={`size-${sizeIdx + 1}`}
-                              className={cn(
-                                'radio-button picker-long cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
-                                size.trim().toLocaleLowerCase() ===
-                                  field?.value?.trim()?.toLocaleLowerCase()
-                                  ? 'border-[#6b7280]'
-                                  : 'border-white',
+          {data?.dimensions && data?.dimensions?.length > 0 && (
+            <div className="relative flex flex-wrap justify-between gap-6 py-2">
+              {data?.dimensions?.map(
+                (
+                  dimension: { label: string; values: string[] },
+                  dIdx: number,
+                ) => (
+                  <div key={`${dIdx + 1}`} className="grid gap-3">
+                    <div className="text-sm">
+                      {dimension.label}:{' '}
+                      <span className="capitalize text-gray-400">
+                        {watch('dimensions')[dIdx]?.value || ''}{' '}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      {dimension?.values?.map(
+                        (value: string, valueIdx: number) => (
+                          <div key={`${valueIdx + 1}`}>
+                            <Controller
+                              name={`dimensions.${dIdx}.value`}
+                              control={control}
+                              render={({ field }) => (
+                                <label
+                                  htmlFor={`dimensions-${value + 1}`}
+                                  className={cn(
+                                    'radio-button picker-long cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
+                                    value.trim().toLocaleLowerCase() ===
+                                      field?.value?.toLocaleLowerCase()
+                                      ? 'border-[#6b7280]'
+                                      : 'border-white',
+                                  )}
+                                >
+                                  <input
+                                    id={`dimensions-${value + 1}`}
+                                    onClick={(dValue) => {
+                                      field.onChange(dValue);
+                                    }}
+                                    type="radio"
+                                    value={value}
+                                    hidden
+                                  />{' '}
+                                  {value}
+                                </label>
                               )}
-                            >
-                              <input
-                                id={`size-${sizeIdx + 1}`}
-                                onClick={(value) => {
-                                  field.onChange(value);
-                                }}
-                                type="radio"
-                                name="size"
-                                value={size}
-                                hidden
-                              />{' '}
-                              {size}
-                            </label>
-                          )}
-                        />
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {data?.dimensions?.range && data?.dimensions?.range?.length > 0 && (
-            <div className="relative flex flex-wrap justify-between py-2">
-              <div className="grid gap-2">
-                <div className="text-sm">
-                  Range{' '}
-                  <span className="capitalize text-gray-400">
-                    {watch('range') || ''}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  {data?.dimensions?.range?.map(
-                    (range: string, rangeIdx: number) => (
-                      <div key={`${rangeIdx + 1}`}>
-                        <Controller
-                          name="range"
-                          control={control}
-                          render={({ field }) => (
-                            <label
-                              htmlFor={`range-${rangeIdx + 1}`}
-                              className={cn(
-                                'radio-button picker-long cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
-                                range.trim().toLocaleLowerCase() ===
-                                  field?.value?.trim()?.toLocaleLowerCase()
-                                  ? 'border-[#6b7280]'
-                                  : 'border-white',
-                              )}
-                            >
-                              <input
-                                id={`range-${rangeIdx + 1}`}
-                                onClick={(value) => {
-                                  field.onChange(value);
-                                }}
-                                type="radio"
-                                name="range"
-                                value={range}
-                                hidden
-                              />{' '}
-                              {range}
-                            </label>
-                          )}
-                        />
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
+                            />
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                ),
+              )}
             </div>
           )}
 
           <div className="fixed bottom-0 left-0 z-10 mt-12 flex w-full items-center gap-4 bg-white bg-opacity-90 p-4 md:static md:bg-transparent md:p-0">
             <Input
               type="number"
+              {...register('quantity', {
+                required: 'Quantity is required',
+                min: {
+                  value: 1,
+                  message: 'Quantity should be greater than 0',
+                },
+                max: {
+                  value: quantity,
+                  message: `Quantity should be less than or equal to ${quantity}`,
+                },
+              })}
               placeholder="Quantity"
               defaultValue={1}
               className="flex h-12 min-h-full w-20 items-center justify-center gap-4 rounded-lg border bg-white py-2.5 text-left focus:outline-none"
               min={1}
-              max={data?.quantity}
+              max={quantity}
             />
             <Button
               className="w-full min-w-[150px] md:max-w-xs"
