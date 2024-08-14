@@ -145,7 +145,6 @@ export default function Basicinfo({ data }: { data: Product }) {
     setProductAttribute((prev) => ({ ...prev, selectedImage: image }));
   };
 
-  // eslint-disable-next-line no-unused-vars
   const handleWishlistUpdate = (product: Product, action: 'add' | 'remove') => {
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
     let newWishlist;
@@ -479,7 +478,7 @@ export default function Basicinfo({ data }: { data: Product }) {
           <div className="flex flex-wrap gap-4">
             {productAttribute.isProductOnWishlist ? (
               <button
-                onClick={() => removeProductFromWishlist(data)}
+                onClick={() => handleWishlistUpdate(data, 'remove')}
                 className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
               >
                 <svg
@@ -501,7 +500,7 @@ export default function Basicinfo({ data }: { data: Product }) {
               </button>
             ) : (
               <button
-                onClick={() => addToWishlist(data)}
+                onClick={() => handleWishlistUpdate(data, 'add')}
                 className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
               >
                 <HeartIcon className="h-4 w-4" />
