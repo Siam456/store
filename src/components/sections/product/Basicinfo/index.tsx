@@ -57,62 +57,67 @@ export default function Basicinfo({ data }: { data: Product }) {
     defaultValues: {
       color: '',
       discount: 0,
-      dimensions: [
-        {
-          label: '',
-          value: '',
-        },
-      ],
+      dimensions: [{ label: '', value: '' }],
       quantity: 1,
     },
   });
 
-  const [price, setPrice] = useState<number>(0);
-  const [originalPrice, setOriginalPrice] = useState<number>(0);
-  const [discount, setDiscount] = useState<number>(0);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [isStockAvailable, setIsStockAvailable] = useState<boolean>(false);
-
-  const [selectedImage, setSelectedImage] = useState('./placeholder.webp');
-
-  const [isShareOpen, setIsShareOpen] = useState(false);
-
-  const [isProductOnWishlist, setIsProductOnWishlist] = useState(false);
+  const [productAttribute, setProductAttribute] = useState<
+    Partial<Product> & {
+      discount: number;
+      quantity: number;
+      isStockAvailable: boolean;
+      selectedImage: string;
+      isShareOpen: boolean;
+      isProductOnWishlist: boolean;
+    }
+  >({
+    price: 0,
+    originalPrice: 0,
+    discount: 0,
+    quantity: 0,
+    isStockAvailable: false,
+    selectedImage: '',
+    isShareOpen: false,
+    isProductOnWishlist: false,
+  });
 
   useEffect(() => {
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-
-    if (wishlist.length > 0 && data) {
-      const _isProductOnWishlist = wishlist.some(
+    if (wishlist.length && data) {
+      const isProductOnWishlist = wishlist.some(
         (item: Product) => item._id === data._id,
       );
-      setIsProductOnWishlist(_isProductOnWishlist);
+      setProductAttribute((prev) => ({ ...prev, isProductOnWishlist }));
     }
   }, [data]);
 
   useEffect(() => {
     const subscription = watch((value) => {
-      if (data?.varieties) {
-        const selectedVariety = data?.varieties.find(
-          (variety) =>
-            variety.color === value.color &&
-            value?.dimensions?.every(
-              (v) => v && variety.dimensions[v?.label || ''] === v.value,
-            ),
-        );
+      if (!data?.varieties) return;
 
-        setOriginalPrice(selectedVariety?.price || data?.originalPrice || 0);
-        setPrice(selectedVariety?.salePrice || data?.price || 0);
+      const selectedVariety = data.varieties.find(
+        (variety) =>
+          variety.color === value.color &&
+          value?.dimensions &&
+          value?.dimensions.every(
+            (v) => v && variety.dimensions[v.label || ''] === v.value,
+          ),
+      );
 
-        setQuantity(
+      setProductAttribute((prev) => ({
+        ...prev,
+        selectedImage: data?.images[0] || '',
+        originalPrice: selectedVariety?.price || data?.originalPrice || 0,
+        price: selectedVariety?.salePrice || data?.price || 0,
+        quantity:
           selectedVariety?.availability?.quantity || data?.quantity || 0,
-        );
-        setDiscount(selectedVariety?.discount || data?.discount || 0);
-
-        if (selectedVariety?.availability?.inStock) {
-          setIsStockAvailable(true);
-        }
-      }
+        discount: selectedVariety?.discount || data?.discount || 0,
+        isStockAvailable:
+          selectedVariety?.availability?.inStock ||
+          (data?.quantity || 0) > 0 ||
+          false,
+      }));
     });
 
     return () => subscription.unsubscribe();
@@ -120,24 +125,14 @@ export default function Basicinfo({ data }: { data: Product }) {
 
   useEffect(() => {
     if (data) {
-      setSelectedImage(data?.images[0]);
-      setOriginalPrice(data?.originalPrice);
-      setPrice(data?.price);
-
-      if (data?.quantity > 0) {
-        setIsStockAvailable(true);
-      } else {
-        setIsStockAvailable(false);
+      if (data.colors?.length) {
+        setValue('color', data.colors[0].name);
       }
 
-      if (data?.colors && data?.colors?.length > 0) {
-        setValue('color', data?.colors[0].name);
-      }
-
-      if (data?.dimensions.length > 0) {
+      if (data.dimensions.length) {
         setValue(
           'dimensions',
-          data?.dimensions?.map((dimension) => ({
+          data.dimensions.map((dimension) => ({
             label: dimension.label,
             value: dimension.values[0],
           })),
@@ -147,44 +142,39 @@ export default function Basicinfo({ data }: { data: Product }) {
   }, [data, setValue]);
 
   const handleSelectImage = (image: string) => {
-    setSelectedImage(image);
+    setProductAttribute((prev) => ({ ...prev, selectedImage: image }));
   };
 
-  const addToWishlist = (product: Product) => {
+  const handleWishlistUpdate = (product: Product, action: 'add' | 'remove') => {
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    let newWishlist;
 
-    const _isProductOnWishlist = wishlist.some(
-      (item: Product) => item._id === product._id,
-    );
-
-    if (!_isProductOnWishlist)
-      localStorage.setItem(
-        'wishlist',
-        JSON.stringify([
-          {
-            _id: product._id,
-            title: product.title,
-            images: product.images,
-            discount: product.discount,
-            avgRating: product.avgRating,
-            originalPrice: product.originalPrice,
-            price: product.price,
-            slug: product.slug,
-          },
-          ...wishlist,
-        ]),
+    if (
+      action === 'add' &&
+      !wishlist.some((item: Product) => item._id === product._id)
+    ) {
+      newWishlist = [
+        {
+          _id: product._id,
+          title: product.title,
+          images: product.images,
+          discount: product.discount,
+          avgRating: product.avgRating,
+          originalPrice: product.originalPrice,
+          price: product.price,
+          slug: product.slug,
+        },
+        ...wishlist,
+      ];
+      setProductAttribute((prev) => ({ ...prev, isProductOnWishlist: true }));
+    } else if (action === 'remove') {
+      newWishlist = wishlist.filter(
+        (item: Product) => item._id !== product._id,
       );
+      setProductAttribute((prev) => ({ ...prev, isProductOnWishlist: false }));
+    }
 
-    setIsProductOnWishlist(true);
-  };
-
-  const removeProductFromWishlist = (product: Product) => {
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    const newWishlist = wishlist.filter(
-      (item: Product) => item._id !== product._id,
-    );
     localStorage.setItem('wishlist', JSON.stringify(newWishlist));
-    setIsProductOnWishlist(false);
   };
 
   const onSubmit = (_data: any) => {
@@ -197,13 +187,13 @@ export default function Basicinfo({ data }: { data: Product }) {
       <div className="relative flex-1">
         {data?.discount !== 0 && (
           <span className="absolute right-2 top-2 z-10 rounded-md bg-red-400 px-2 py-1 text-xs font-semibold text-white">
-            {discount.toFixed(0)}%
+            {productAttribute.discount.toFixed(0)}%
           </span>
         )}{' '}
         <img
           width={640}
           height={640}
-          src={selectedImage}
+          src={productAttribute.selectedImage}
           alt={data?.title}
           className="w-full min-w-[350px] rounded-xl object-contain"
         />
@@ -263,12 +253,16 @@ export default function Basicinfo({ data }: { data: Product }) {
             {data?.discount > 0 ? (
               <>
                 <span className="font-normal text-gray-400 line-through">
-                  €${originalPrice?.toFixed(2)}
+                  €${productAttribute.originalPrice?.toFixed(2)}
                 </span>
-                <span className="ml-2">€{price?.toFixed(2)}</span>
+                <span className="ml-2">
+                  €{productAttribute.price?.toFixed(2)}
+                </span>
               </>
             ) : (
-              <span className="ml-2">€{price?.toFixed(2)}</span>
+              <span className="ml-2">
+                €{productAttribute.price?.toFixed(2)}
+              </span>
             )}
           </div>
         </div>
@@ -277,7 +271,7 @@ export default function Basicinfo({ data }: { data: Product }) {
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Availability: </span>
 
-            {isStockAvailable ? (
+            {productAttribute.isStockAvailable ? (
               <span className="text-green-600">In Stock</span>
             ) : (
               <span className="text-red-600">Out Of Stock</span>
@@ -387,10 +381,10 @@ export default function Basicinfo({ data }: { data: Product }) {
                         {watch('dimensions')[dIdx]?.value || ''}{' '}
                       </span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {dimension?.values?.map(
                         (value: string, valueIdx: number) => (
-                          <div key={`${valueIdx + 1}`}>
+                          <div className="mb-3" key={`${valueIdx + 1}`}>
                             <Controller
                               name={`dimensions.${dIdx}.value`}
                               control={control}
@@ -398,12 +392,14 @@ export default function Basicinfo({ data }: { data: Product }) {
                                 <label
                                   htmlFor={`dimensions-${value + 1}`}
                                   className={cn(
-                                    'radio-button picker-long cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
+                                    'radio-button picker-long h-12 cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
                                     value.trim().toLocaleLowerCase() ===
                                       field?.value?.toLocaleLowerCase()
                                       ? 'border-[#6b7280]'
                                       : 'border-white',
+                                    'custom-height', // Add a custom class for height
                                   )}
+                                  style={{ height: '50px' }} // Inline style for height
                                 >
                                   <input
                                     id={`dimensions-${value + 1}`}
@@ -438,19 +434,19 @@ export default function Basicinfo({ data }: { data: Product }) {
                   message: 'Quantity should be greater than 0',
                 },
                 max: {
-                  value: quantity,
-                  message: `Quantity should be less than or equal to ${quantity}`,
+                  value: productAttribute.quantity,
+                  message: `Quantity should be less than or equal to ${productAttribute.quantity}`,
                 },
               })}
               placeholder="Quantity"
               defaultValue={1}
               className="flex h-12 min-h-full w-20 items-center justify-center gap-4 rounded-lg border bg-white py-2.5 text-left focus:outline-none"
               min={1}
-              max={quantity}
+              max={productAttribute.quantity}
             />
             <Button
               className="w-full min-w-[150px] md:max-w-xs"
-              disabled={!isStockAvailable}
+              disabled={!productAttribute.isStockAvailable}
             >
               Add to Cart
             </Button>
@@ -480,9 +476,9 @@ export default function Basicinfo({ data }: { data: Product }) {
             <hr />
           </div>
           <div className="flex flex-wrap gap-4">
-            {isProductOnWishlist ? (
+            {productAttribute.isProductOnWishlist ? (
               <button
-                onClick={() => removeProductFromWishlist(data)}
+                onClick={() => handleWishlistUpdate(data, 'remove')}
                 className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
               >
                 <svg
@@ -504,14 +500,14 @@ export default function Basicinfo({ data }: { data: Product }) {
               </button>
             ) : (
               <button
-                onClick={() => addToWishlist(data)}
+                onClick={() => handleWishlistUpdate(data, 'add')}
                 className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
               >
                 <HeartIcon className="h-4 w-4" />
                 <span>Add To Wishlist</span>
               </button>
             )}
-            {isShareOpen ? (
+            {productAttribute.isShareOpen ? (
               <div className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400">
                 <Link href="/">
                   <TwitterLogoIcon className="h-4 w-4" />
@@ -525,7 +521,12 @@ export default function Basicinfo({ data }: { data: Product }) {
               </div>
             ) : (
               <button
-                onClick={() => setIsShareOpen(true)}
+                onClick={() => {
+                  setProductAttribute((prev) => ({
+                    ...prev,
+                    isShareOpen: !prev.isShareOpen,
+                  }));
+                }}
                 className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-400"
               >
                 <Share1Icon className="h-4 w-4" />
