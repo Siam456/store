@@ -77,7 +77,7 @@ export default function Basicinfo({ data }: { data: Product }) {
     discount: 0,
     quantity: 0,
     isStockAvailable: false,
-    selectedImage: '',
+    selectedImage: 'https://source.unsplash.com/random/640x640',
     isShareOpen: false,
     isProductOnWishlist: false,
   });
@@ -96,6 +96,29 @@ export default function Basicinfo({ data }: { data: Product }) {
     const subscription = watch((value) => {
       if (!data?.varieties) return;
 
+      // const varietyMap = new Map();
+
+      // data.varieties.forEach((variety) => {
+      //   // Generate a unique key based on color and dimensions
+      //   const key = `${variety.color}:${Object.entries(variety.dimensions)
+      //     .map(([label, value]) => `${label}:${value}`)
+      //     .join(',')}`;
+
+      //   varietyMap.set(key, variety);
+      // });
+
+      // console.log(varietyMap);
+
+      // // Generate the key for the selected variety based on the input value
+      // const valueKey = `${value.color}:${(value.dimensions || [])
+      //   .map((v) => `${v.label}:${v.value}`)
+      //   .join(',')}`;
+
+      // // Get the selected variety in O(1) time
+      // const selectedVariety = varietyMap.get(valueKey);
+
+      // console.log(selectedVariety);
+
       const selectedVariety = data.varieties.find(
         (variety) =>
           variety.color === value.color &&
@@ -107,7 +130,6 @@ export default function Basicinfo({ data }: { data: Product }) {
 
       setProductAttribute((prev) => ({
         ...prev,
-        selectedImage: data?.images[0] || '',
         originalPrice: selectedVariety?.price || data?.originalPrice || 0,
         price: selectedVariety?.salePrice || data?.price || 0,
         quantity:
@@ -128,6 +150,12 @@ export default function Basicinfo({ data }: { data: Product }) {
       if (data.colors?.length) {
         setValue('color', data.colors[0].name);
       }
+
+      setProductAttribute((prev) => ({
+        ...prev,
+        selectedImage:
+          data?.images[0] || 'https://source.unsplash.com/random/640x640',
+      }));
 
       if (data.dimensions.length) {
         setValue(
@@ -180,6 +208,8 @@ export default function Basicinfo({ data }: { data: Product }) {
   const onSubmit = (_data: any) => {
     // eslint-disable-next-line no-console
     console.log(_data);
+    // eslint-disable-next-line no-console
+    console.log(productAttribute);
   };
 
   return (
