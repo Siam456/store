@@ -92,32 +92,9 @@ export default function Basicinfo({ data }: { data: Product }) {
     }
   }, [data]);
 
-  useEffect(() => {
+  const changeProductAttribute = () => {
     const subscription = watch((value) => {
       if (!data?.varieties) return;
-
-      // const varietyMap = new Map();
-
-      // data.varieties.forEach((variety) => {
-      //   // Generate a unique key based on color and dimensions
-      //   const key = `${variety.color}:${Object.entries(variety.dimensions)
-      //     .map(([label, value]) => `${label}:${value}`)
-      //     .join(',')}`;
-
-      //   varietyMap.set(key, variety);
-      // });
-
-      // console.log(varietyMap);
-
-      // // Generate the key for the selected variety based on the input value
-      // const valueKey = `${value.color}:${(value.dimensions || [])
-      //   .map((v) => `${v.label}:${v.value}`)
-      //   .join(',')}`;
-
-      // // Get the selected variety in O(1) time
-      // const selectedVariety = varietyMap.get(valueKey);
-
-      // console.log(selectedVariety);
 
       const selectedVariety = data.varieties.find(
         (variety) =>
@@ -143,7 +120,7 @@ export default function Basicinfo({ data }: { data: Product }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [watch, data]);
+  };
 
   useEffect(() => {
     if (data) {
@@ -153,11 +130,16 @@ export default function Basicinfo({ data }: { data: Product }) {
 
       setProductAttribute((prev) => ({
         ...prev,
+        price: data.price,
+        originalPrice: data.originalPrice,
+        discount: data.discount,
+        quantity: data.quantity,
+        isStockAvailable: data.quantity > 0,
         selectedImage:
           data?.images[0] || 'https://source.unsplash.com/random/640x640',
       }));
 
-      if (data.dimensions.length) {
+      if (data?.dimensions?.length > 0) {
         setValue(
           'dimensions',
           data.dimensions.map((dimension) => ({
@@ -325,8 +307,8 @@ export default function Basicinfo({ data }: { data: Product }) {
         >
           {data.colors?.length > 0 && (
             <div className="relative flex flex-wrap justify-between py-2">
-              <div className="grid gap-2">
-                <div className="text-sm">
+              <div>
+                <div className="mb-2 text-sm">
                   Color:{' '}
                   <span className="capitalize text-gray-400">
                     {watch('color') || ''}
@@ -435,6 +417,7 @@ export default function Basicinfo({ data }: { data: Product }) {
                                     id={`dimensions-${value + 1}`}
                                     onClick={(dValue) => {
                                       field.onChange(dValue);
+                                      changeProductAttribute();
                                     }}
                                     type="radio"
                                     value={value}
