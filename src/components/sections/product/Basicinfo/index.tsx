@@ -94,31 +94,31 @@ export default function Basicinfo({ data }: { data: Product }) {
   //   }));
   // };
 
-  useEffect(() => {
-    if (productAttribute) {
-      const selectedVariety = data.varieties.find(
-        (variety) =>
-          variety.color === productAttribute?.color &&
-          productAttribute?.dimensions &&
-          productAttribute?.dimensions.every(
-            (v) => v && variety.dimensions[v.label] === v.value,
-          ),
-      );
+  // useEffect(() => {
+  //   if (productAttribute) {
+  //     const selectedVariety = data.varieties.find(
+  //       (variety) =>
+  //         variety.color === productAttribute?.color &&
+  //         productAttribute?.dimensions &&
+  //         productAttribute?.dimensions.every(
+  //           (v) => v && variety.dimensions[v.label] === v.value,
+  //         ),
+  //     );
 
-      setProductAttribute((prev) => ({
-        ...prev,
-        originalPrice: selectedVariety?.price || data?.originalPrice || 0,
-        price: selectedVariety?.salePrice || data?.price || 0,
-        quantity:
-          selectedVariety?.availability?.quantity || data?.quantity || 0,
-        discount: selectedVariety?.discount || data?.discount || 0,
-        isStockAvailable:
-          selectedVariety?.availability?.inStock ||
-          (data?.quantity || 0) > 0 ||
-          false,
-      }));
-    }
-  }, [productAttribute, data]);
+  //     setProductAttribute((prev) => ({
+  //       ...prev,
+  //       originalPrice: selectedVariety?.price || data?.originalPrice || 0,
+  //       price: selectedVariety?.salePrice || data?.price || 0,
+  //       quantity:
+  //         selectedVariety?.availability?.quantity || data?.quantity || 0,
+  //       discount: selectedVariety?.discount || data?.discount || 0,
+  //       isStockAvailable:
+  //         selectedVariety?.availability?.inStock ||
+  //         (data?.quantity || 0) > 0 ||
+  //         false,
+  //     }));
+  //   }
+  // }, [productAttribute, data]);
 
   useEffect(() => {
     if (data) {
@@ -387,7 +387,9 @@ export default function Basicinfo({ data }: { data: Product }) {
                             >
                               <input
                                 id={`dimensions-${value + 1}`}
-                                onClick={(_dValue) => {
+                                onClick={(_e) => {
+                                  // console.log(e.target);
+
                                   setProductAttribute((prev) => ({
                                     ...prev,
                                     dimensions: prev.dimensions.map(
