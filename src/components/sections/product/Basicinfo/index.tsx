@@ -12,66 +12,21 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Controller, useForm } from 'react-hook-form';
-
-type Product = {
-  _id: string;
-  title: string;
-  images: string[];
-  discount: number;
-  slug: string;
-  avgRating: number;
-  originalPrice: number;
-  price: number;
-  quantity: number;
-  sku: string;
-  description: string;
-  category: string[];
-  shortDescription: string;
-  colors: {
-    name: string;
-    hexCode: string;
-    imageUrl: string;
-  }[];
-  dimensions: {
-    label: string;
-    values: string[];
-  }[];
-  varieties: {
-    color: string;
-    dimensions: {
-      [key: string]: string;
-    };
-    discount: number;
-    price: number;
-    salePrice: number;
-    availability: {
-      inStock: boolean;
-      quantity: number;
-    };
-  }[];
-};
+// import { Controller, useForm } from 'react-hook-form';
+import { Product, ProductAttribute } from '@/types/product';
+import ColorSelector from './ColorSelector';
 
 export default function Basicinfo({ data }: { data: Product }) {
-  const { watch, register, control, setValue, handleSubmit } = useForm({
-    defaultValues: {
-      color: '',
-      discount: 0,
-      dimensions: [{ label: '', value: '' }],
-      quantity: 1,
-    },
-  });
+  // const { watch, register, control, setValue, handleSubmit } = useForm({
+  //   defaultValues: {
+  //     color: '',
+  //     discount: 0,
+  //     dimensions: [{ label: '', value: '' }],
+  //     quantity: 1,
+  //   },
+  // });
 
-  const [productAttribute, setProductAttribute] = useState<
-    Partial<Product> & {
-      discount: number;
-      quantity: number;
-      isStockAvailable: boolean;
-      selectedImage: string;
-      isShareOpen: boolean;
-      isProductOnWishlist: boolean;
-    }
-  >({
+  const [productAttribute, setProductAttribute] = useState<ProductAttribute>({
     price: 0,
     originalPrice: 0,
     discount: 0,
@@ -80,6 +35,8 @@ export default function Basicinfo({ data }: { data: Product }) {
     selectedImage: 'https://source.unsplash.com/random/640x640',
     isShareOpen: false,
     isProductOnWishlist: false,
+    color: '',
+    dimensions: [{ label: '', value: '' }],
   });
 
   useEffect(() => {
@@ -92,16 +49,59 @@ export default function Basicinfo({ data }: { data: Product }) {
     }
   }, [data]);
 
-  const changeProductAttribute = () => {
-    const subscription = watch((value) => {
-      if (!data?.varieties) return;
+  // const changeProductAttribute = ({
+  //   type,
+  //   value,
+  // }: {
+  //   type: string;
+  //   value:
+  //     | string
+  //     | {
+  //         label: string;
+  //         value: string;
+  //       };
+  // }) => {
+  //   if (!data?.varieties) return;
 
+  //   // const selectedVariety = data.varieties.find(
+  //   //   (variety) =>
+  //   //     variety.color === productAttribute?.color &&
+  //   //     productAttribute?.dimensions &&
+  //   //     productAttribute?.dimensions.every(
+  //   //       (v) => v && variety.dimensions[v.label || ''] === v.value,
+  //   //     ),
+  //   // );
+
+  //   const selectedVariety = data.varieties.find(
+  //     (variety) =>
+  //       variety.color === productAttribute?.color &&
+  //       productAttribute?.dimensions &&
+  //       productAttribute?.dimensions.every(
+  //         (v) => v && variety.dimensions[v.label] === v.value,
+  //       ),
+  //   );
+
+  //   setProductAttribute((prev) => ({
+  //     ...prev,
+  //     originalPrice: selectedVariety?.price || data?.originalPrice || 0,
+  //     price: selectedVariety?.salePrice || data?.price || 0,
+  //     quantity: selectedVariety?.availability?.quantity || data?.quantity || 0,
+  //     discount: selectedVariety?.discount || data?.discount || 0,
+  //     isStockAvailable:
+  //       selectedVariety?.availability?.inStock ||
+  //       (data?.quantity || 0) > 0 ||
+  //       false,
+  //   }));
+  // };
+
+  useEffect(() => {
+    if (productAttribute) {
       const selectedVariety = data.varieties.find(
         (variety) =>
-          variety.color === value.color &&
-          value?.dimensions &&
-          value?.dimensions.every(
-            (v) => v && variety.dimensions[v.label || ''] === v.value,
+          variety.color === productAttribute?.color &&
+          productAttribute?.dimensions &&
+          productAttribute?.dimensions.every(
+            (v) => v && variety.dimensions[v.label] === v.value,
           ),
       );
 
@@ -117,17 +117,19 @@ export default function Basicinfo({ data }: { data: Product }) {
           (data?.quantity || 0) > 0 ||
           false,
       }));
-    });
-
-    return () => subscription.unsubscribe();
-  };
+    }
+  }, [productAttribute, data]);
 
   useEffect(() => {
     if (data) {
-      if (data.colors?.length) {
-        setValue('color', data.colors[0].name);
-      }
+      let dimensions: { label: string; value: string }[] = [];
 
+      if (data?.dimensions?.length > 0) {
+        dimensions = data.dimensions.map((dimension) => ({
+          label: dimension.label,
+          value: dimension.values[0],
+        }));
+      }
       setProductAttribute((prev) => ({
         ...prev,
         price: data.price,
@@ -135,21 +137,13 @@ export default function Basicinfo({ data }: { data: Product }) {
         discount: data.discount,
         quantity: data.quantity,
         isStockAvailable: data.quantity > 0,
+        color: data.colors[0]?.name || '',
+        dimensions,
         selectedImage:
           data?.images[0] || 'https://source.unsplash.com/random/640x640',
       }));
-
-      if (data?.dimensions?.length > 0) {
-        setValue(
-          'dimensions',
-          data.dimensions.map((dimension) => ({
-            label: dimension.label,
-            value: dimension.values[0],
-          })),
-        );
-      }
     }
-  }, [data, setValue]);
+  }, [data]);
 
   const handleSelectImage = (image: string) => {
     setProductAttribute((prev) => ({ ...prev, selectedImage: image }));
@@ -187,6 +181,7 @@ export default function Basicinfo({ data }: { data: Product }) {
     localStorage.setItem('wishlist', JSON.stringify(newWishlist));
   };
 
+  // eslint-disable-next-line no-unused-vars
   const onSubmit = (_data: any) => {
     // eslint-disable-next-line no-console
     console.log(_data);
@@ -302,7 +297,9 @@ export default function Basicinfo({ data }: { data: Product }) {
         <hr />
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={(e) => {
+            e.preventDefault();
+          }}
           className="mb-8 mt-4 flex flex-col justify-between gap-1"
         >
           {data.colors?.length > 0 && (
@@ -311,7 +308,7 @@ export default function Basicinfo({ data }: { data: Product }) {
                 <div className="mb-2 text-sm">
                   Color:{' '}
                   <span className="capitalize text-gray-400">
-                    {watch('color') || ''}
+                    {productAttribute.color}{' '}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -321,34 +318,10 @@ export default function Basicinfo({ data }: { data: Product }) {
                       colorIdx: number,
                     ) => (
                       <div key={`${colorIdx + 1}`}>
-                        <Controller
-                          name="color"
-                          control={control}
-                          render={({ field }) => (
-                            <label
-                              htmlFor={`color-${color.name}`}
-                              style={{
-                                display: 'inline-block',
-                                background: color.hexCode.trim().toLowerCase(),
-                                border: '2px solid white',
-                              }}
-                              className={cn(
-                                'h-8 w-8 cursor-pointer rounded-full ring-[#6b7280]',
-                                color.name.trim().toLowerCase() ===
-                                  field.value.trim().toLowerCase()
-                                  ? 'ring-2'
-                                  : 'hover:ring-2',
-                              )}
-                            >
-                              <input
-                                id={`color-${color.name}`}
-                                type="radio"
-                                {...field}
-                                value={color.name}
-                                className="h-0 w-0 opacity-0"
-                              />
-                            </label>
-                          )}
+                        <ColorSelector
+                          color={color}
+                          productAttribute={productAttribute}
+                          setProductAttribute={setProductAttribute}
                         />
                       </div>
                     ),
@@ -365,13 +338,14 @@ export default function Basicinfo({ data }: { data: Product }) {
                     colorIdx,
                   ) => (
                     <div className="overflow-hidden" key={`${colorIdx + 1}`}>
-                      {color.imageUrl && color.name === watch('color') && (
-                        <img
-                          src={color.imageUrl}
-                          alt={color.name}
-                          className="block max-h-24 max-w-24 rounded-lg"
-                        />
-                      )}
+                      {color.imageUrl &&
+                        color.name === productAttribute.color && (
+                          <img
+                            src={color.imageUrl}
+                            alt={color.name}
+                            className="block max-h-24 max-w-24 rounded-lg"
+                          />
+                        )}
                     </div>
                   ),
                 )}
@@ -390,43 +364,51 @@ export default function Basicinfo({ data }: { data: Product }) {
                     <div className="text-sm">
                       {dimension.label}:{' '}
                       <span className="capitalize text-gray-400">
-                        {watch('dimensions')[dIdx]?.value || ''}{' '}
+                        {productAttribute.dimensions[dIdx]?.value || ''}{' '}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {dimension?.values?.map(
                         (value: string, valueIdx: number) => (
                           <div className="mb-3" key={`${valueIdx + 1}`}>
-                            <Controller
-                              name={`dimensions.${dIdx}.value`}
-                              control={control}
-                              render={({ field }) => (
-                                <label
-                                  htmlFor={`dimensions-${value + 1}`}
-                                  className={cn(
-                                    'radio-button picker-long h-12 cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
-                                    value.trim().toLocaleLowerCase() ===
-                                      field?.value?.toLocaleLowerCase()
-                                      ? 'border-[#6b7280]'
-                                      : 'border-white',
-                                    'custom-height', // Add a custom class for height
-                                  )}
-                                  style={{ height: '50px' }} // Inline style for height
-                                >
-                                  <input
-                                    id={`dimensions-${value + 1}`}
-                                    onClick={(dValue) => {
-                                      field.onChange(dValue);
-                                      changeProductAttribute();
-                                    }}
-                                    type="radio"
-                                    value={value}
-                                    hidden
-                                  />{' '}
-                                  {value}
-                                </label>
+                            <label
+                              htmlFor={`dimensions-${value + 1}`}
+                              className={cn(
+                                'radio-button picker-long h-12 cursor-pointer rounded-lg border-2 bg-white px-4 py-2 text-sm',
+                                value.trim().toLocaleLowerCase() ===
+                                  productAttribute?.dimensions[
+                                    dIdx
+                                  ]?.value?.toLocaleLowerCase()
+                                  ? 'border-[#6b7280]'
+                                  : 'border-white',
+                                'custom-height', // Add a custom class for height
                               )}
-                            />
+                              style={{ height: '50px' }} // Inline style for height
+                            >
+                              <input
+                                id={`dimensions-${value + 1}`}
+                                onClick={(_dValue) => {
+                                  setProductAttribute((prev) => ({
+                                    ...prev,
+                                    dimensions: prev.dimensions.map(
+                                      (d, idx) => {
+                                        if (idx === dIdx) {
+                                          return {
+                                            label: dimension.label,
+                                            value,
+                                          };
+                                        }
+                                        return d;
+                                      },
+                                    ),
+                                  }));
+                                }}
+                                type="radio"
+                                value={value}
+                                hidden
+                              />{' '}
+                              {value}
+                            </label>
                           </div>
                         ),
                       )}
@@ -440,17 +422,13 @@ export default function Basicinfo({ data }: { data: Product }) {
           <div className="fixed bottom-0 left-0 z-10 mt-12 flex w-full items-center gap-4 bg-white bg-opacity-90 p-4 md:static md:bg-transparent md:p-0">
             <Input
               type="number"
-              {...register('quantity', {
-                required: 'Quantity is required',
-                min: {
-                  value: 1,
-                  message: 'Quantity should be greater than 0',
-                },
-                max: {
-                  value: productAttribute.quantity,
-                  message: `Quantity should be less than or equal to ${productAttribute.quantity}`,
-                },
-              })}
+              name="quantity"
+              onChange={(e) => {
+                setProductAttribute((prev) => ({
+                  ...prev,
+                  quantity: Number(e.target.value),
+                }));
+              }}
               placeholder="Quantity"
               defaultValue={1}
               className="flex h-12 min-h-full w-20 items-center justify-center gap-4 rounded-lg border bg-white py-2.5 text-left focus:outline-none"
